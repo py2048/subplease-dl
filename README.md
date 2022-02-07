@@ -1,6 +1,9 @@
 # subplease-dl
 Search and download anime from subplease.org
 
+## Demo
+![](Demo.gif)
+
 ## Requirements
 `curl`, `sed`, `column`, 
 [`fzf`](https://github.com/junegunn/fzf), 
