@@ -48,12 +48,15 @@ show() {
 
 # Search anime by name
 search() {
-    local res=$(curl -s 'https://subsplease.org/shows/' | pup 'div.all-shows-link json{}')
+    # Get all div with "all-shows-link" class
+    local res_html=$(curl -s 'https://subsplease.org/shows/' | grep -oP '<div class="all-shows-link">.*?</div>')
+    # Convert html response to json
+    local res_js=$(printf "["; echo "$res_html" | perl -pe 's/<div class="all-shows-link"><a href="\/shows\/(.*?)" title="(.*?)">(.*?)<\/a><\/div>/{"href": "$1", "title": "$2"},/g' | head -c -2; printf "]\n")
     # Choose anime
-    local showname=$(jq -r '.[].children[0].title' <<<$res | fzf --header 'All shows from SubsPlease' --reverse)
+    local showname=$(echo $res_js | jq -r '.[].title' | fzf --header 'All shows from SubsPlease' --reverse)
     [ -z "$showname" ] && exit
     # Get showid
-    local showid=$(echo $res | jq -r ".[] | select(.children[0].title == \"$showname\") | .children[0].href" | sed "s/^\/shows\///")
+    local showid=$(echo $res_js | jq -r ".[] | select(.title == \"$showname\") | .href")
     # Get magnet then download
     show "$showid"
 }
