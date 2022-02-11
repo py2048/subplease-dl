@@ -5,10 +5,10 @@ Search and download anime from subplease.org
 ![](Demo.gif)
 
 ## Requirements
-`curl`, `sed`, `column`, 
+`curl`, `perl`,
+[`coreutils`](https://www.gnu.org/software/coreutils/),
 [`fzf`](https://github.com/junegunn/fzf), 
 [`jq`](https://github.com/stedolan/jq), 
-[`pup`](https://github.com/ericchiang/pup)
 
 ## Install
 

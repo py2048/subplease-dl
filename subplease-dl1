@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+timezone='Asia/Saigon'
+
+usage() {
+	cat <<USAGE
+Search and download anime from subplease.org
+
+Usage: $(basename $0) [OPTIONS]
+
+Options:
+  -r, --recent                  Search for recent epsisodes
+  -s, --search                  Search anime by name
+  -t, --time                    Print airtime schedule
+  -h, --help                    Print Usage 
+USAGE
+}
+
+# download magnet from stdin using open/xdg-open
+open_magent() {
+	command -v open >/dev/null && OP="open" || OP="xdg-open"
+	$OP $(</dev/stdin)
+}
+
+# Get list of recent shows
+recent() {
+	# Get response from subplease api
+	local res=$(curl -s "https://subsplease.org/api/?f=latest&tz=$timezone")
+	# Choose epsisode
+	local epsisode=$(jq -r 'keys_unsorted | .[]' <<<$res | fzf --header 'RECENT EPISODES:' --reverse)
+	[ -z "$epsisode" ] && exit
+	# Open magnet
+	echo $res | jq -r ".[\"$epsisode\"].downloads[] | select( .res == \"1080\") | .magnet" | open_magent
+}
+
+
+# Get magnet by show id
+show() {
+    local showid="$1"
+    local res=$(curl -s "https://subsplease.org/api/?f=search&tz=$timezone&s=${showid}")
+    # Choose epsisode
+    local epsisode=$(echo $res | jq -r 'keys_unsorted | .[]' | fzf --header 'EPISODES:' --reverse)
+	[ -z "$epsisode" ] && exit
+	# Download by magnet
+	echo $res | jq -r ".[\"$epsisode\"].downloads[] | select( .res == \"1080\") | .magnet" | open_magent
+
+}
+
+# Search anime by name
+search() {
+    # Get all div with "all-shows-link" class
+    local res_html=$(curl -s 'https://subsplease.org/shows/' | grep -oP '<div class="all-shows-link">.*?</div>')
+    # Convert html response to json
+    local res_js=$(printf "["; echo "$res_html" | perl -pe 's/<div class="all-shows-link"><a href="\/shows\/(.*?)" title="(.*?)">(.*?)<\/a><\/div>/{"href": "$1", "title": "$2"},/g' | head -c -2; printf "]\n")
+    # Choose anime
+    local showname=$(echo $res_js | jq -r '.[].title' | fzf --header 'All shows from SubsPlease' --reverse)
+    [ -z "$showname" ] && exit
+    # Get showid
+    local showid=$(echo $res_js | jq -r ".[] | select(.title == \"$showname\") | .href")
+    # Get magnet then download
+    show "$showid"
+}
+
+# List airtime today
+airtime() {
+    local res=$(curl -s "https://subsplease.org/api/?f=schedule&h=true&tz=$timezone")
+    date
+    echo -e '\033[1mAIRTIME TODAY\033[0m'
+    echo
+    # Print airtime in table
+    echo $res | jq -r '.schedule[] | [.title, .time, .aired] | @tsv' | column -ts $'\t' | sed -e 's/true$/✔/' -e 's/false$//'
+    
+}
+
+# Parse arguments
+case $1 in
+
+    r | -r | --recent | '')
+        recent
+        ;;
+
+    s | -s | --search)
+        search
+        ;;
+
+    t | -t | --time)
+        airtime
+        ;;
+
+    -h | --help)
+        usage
+        ;;
+
+    *)
+        usage
+        exit 1
+        ;;
+
+esac
