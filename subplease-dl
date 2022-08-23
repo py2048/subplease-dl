@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-timezone='Asia/Saigon'
+timezone=$(timedatectl | pcregrep -o1 'Time zone:\s(\w+/\w+)\s.*')
 
 usage() {
     cat <<USAGE

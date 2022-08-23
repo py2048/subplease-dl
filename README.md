@@ -7,12 +7,13 @@ Search and download anime from subplease.org
 ## Requirements
 `curl`, `perl`,
 [`coreutils`](https://www.gnu.org/software/coreutils/),
-[`fzf`](https://github.com/junegunn/fzf), 
-[`jq`](https://github.com/stedolan/jq), 
+[`fzf`](https://github.com/junegunn/fzf)
+(or [`rofi`](https://github.com/davatorium/rofi)),
+[`jq`](https://github.com/stedolan/jq),
 
 ## Install
 
-Modify `timezone` variable in [subplease-dl](subplease-dl) then add it to PATH
+Copy or symlink [subplease-dl](subplease-dl) to PATH
 
 ## Usage
 ```
@@ -22,6 +23,6 @@ Options:
   -r, --recent                  Search for recent epsisodes
   -s, --search                  Search anime by name
   -t, --time                    Print airtime schedule
-  -h, --help                    Print Usage 
+  -h, --help                    Print Usage
 ```
 Default option: `--recent`
